@@ -1,0 +1,31 @@
+import tensorflow as tf
+from sklearn import datasets
+import numpy as np
+import matplotlib.pyplot as plt
+
+iris = datasets.load_iris()
+x_data = iris.data
+y_data = iris.target
+x_data.shape,y_data.shape
+
+from sklearn.model_selection import train_test_split
+
+x_train,x_test,y_train,y_test = train_test_split(x_data,y_data,test_size=0.2,random_state =666)
+x_train.shape,x_test.shape
+
+def softmax(x):
+    return np.exp(x)/(np.sum(np.exp(x)))
+    
+
+def one_hot(y):
+    ret = None
+    for i in y:
+        tmp = np.zeros(3)
+        tmp[i] = 1
+        if ret is None:
+            ret = tmp
+        else:
+            ret = np.vstack([ret,tmp])
+    return ret
+
+
