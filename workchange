@@ -1,37 +1,30 @@
-import numpy as np
-import os
-import pickle
-class CifarLoader:
-    def __init__(self,source_files):
-        self._source = source_files
-        self._i = 0
-        self.images = None
-        self.labels = None
-    def load(self):
-        data = [unpickle(f) for f in self._source]
-        images = np.vstack([d[b'data'] for d in data])
-        n = len(images)
-        self.images = images.reshape(n,3,32,32).transpose(0,2,3,1).astype(float)/255
-        self.labels = one_hot(np.hstack([d[b'labels'] for d in data]),10)
-        return self
-    def next_batch(self,batch_size):
-        x,y = self.images[self._i:self._i+batch_size],self.labels[self._i:self._i+batch_size]
-        self._i = (self._i + batch_size)%len(self.images)
-        return x,y
-
-
-DATA_PATH = 'C:\\Users\\jwx640680\\tensorflow\\learning-resource-master\\data\\cifar-10-batches-py'
-def unpickle(file):
-    with open(os.path.join(DATA_PATH,file),'rb') as fo:
-        dict = pickle.load(fo,encoding='bytes')
-        return dict
-def one_hot(vec,vals = 10):
-    n = len(vec)
-    out = np.zeros((n,vals))
-    out[range(n),vec] = 1
-    return out
-
-
-
-
-
+def sigmoid(x):
+    ar = np.array(x)
+    return 1/(1+np.exp(-ar))
+class MyNeuron:
+    def __init__(self,layers_lst,activation=None,eta=0.01):
+        self._w = []
+        self._b = []
+        for i in range(len(layers_lst)-1):
+            self._w.append(np.random.randn(layers_lst[i+1],layers_lst[i]))
+            self._b.append(np.random.randn())
+        self._eta = eta
+        self._activation = lambda x:sigmoid(x)
+    #mini-batch:注意x的形状
+    def _forpro(self,x_batch):
+        ret = x_batch
+        for w,b in zip(self._w,self._b):
+            ret = self._activation(np.dot(w,ret)+b)
+        return ret
+    #使用平方误差函数
+    def _backpro(self,sigma,oout):
+        pass
+    def train(self,x_train,y_train):
+        train_nums = 10000
+        batch_size = 100
+        for _ in range(train_nums):
+            for i in range(0,len(x_train),batch_size):
+                x_batch = x_train[i:i+batch_size]
+                y_batch = y_train[i:i+batch_size]
+                oret = self._forpro(x_batch)
+                loss = np.sum((y - oret))
