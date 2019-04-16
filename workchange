@@ -1,73 +1,113 @@
-import os
-
-paths = "F:\人工智能\第三阶段-上"
-log_dir_name = "视频"
-log_file = "C:\\Users\\Mloong\\Desktop\\testpy.py"
-
-def get_name_from_dir(path):
-    filename = path[-1]
-    for i in range(1,len(path)+1,10):
-        temp = path[-i-10:-i]
-        names = temp.split(os.sep)
-        if names:
-            filename = names[-1] + filename
-            return filename
-    return path
-
-def list_dir(path,filename):
-    file_lst = []
-    def list_as(path,filename,file_lst):
-        if os.path.isfile(path):
-            return
-        if get_name_from_dir(path) == filename:
-            file_lst.append(path)
-        dirs = [os.path.join(path,x) for x in os.listdir(path)]
-        for filedir in dirs:
-            list_as(filedir,filename,file_lst)
-    list_as(path,filename,file_lst)
-    return file_lst
-    
-   import shutil
-   
-   def copy_file(filedir,path):
-    assert os.path.isfile(filedir),"{} not exist".format(filedir)
-    if isinstance(path,str):
-        if os.path.exists(path):
-            shutil.copy(filedir,path)
-        else:
-            print("path not exist")
-    else:
-        print("list")
-        [shutil.copy(filedir,copy_path) for copy_path in path if os.path.exists(copy_path)]
-
-
-log_dir = list_dir(paths,log_dir_name)
-copy_file(log_file,log_dir)
-
-import runpy
-py_name = get_name_from_dir(log_file)
-for run_log in log_dir:
-    os.chdir(run_log)
-    runpy.run_path(py_name)
-    
-import re
 import numpy as np
-def read_file(filename):
-    with open(filename) as f:
-        content = f.read()
-        ret = re.findall("t = (.*) c = (.*)",content)
-        all_value = np.array(ret,dtype=float)
-        value = np.mean(all_value,axis=0)
-        print(value)
-  
-  
-import time
 
-for ff in log_dir:
-    t = os.path.getctime(os.path.dirname(ff))
-    timeArray = time.localtime(t)
-    otherStyleTime = time.strftime("%Y--%m--%d %H:%M:%S", timeArray)
-    print(otherStyleTime)
-    read_file(os.path.join(ff,"testpy.py"))
-    print("------------------------------------------------------------")
-    
+class Affine:
+    def __init__(self,W,b):
+        self.W = W
+        self.b = b
+        self.x = None
+        self.dw = None
+        self.db = None
+    def forward(self,x):
+        self.x = x
+        out = np.dot(x,self.W) + self.b
+        return out
+    def backward(self,dout):
+        dx = np.dot(dout,self.W.T)
+        self.dW = np.dot(self.x.T,dout)
+        self.db = np.sum(dout,axis=0)
+        return dx
+        
+class Sigmoid:
+    def __init__(self):
+        pass
+    def forward(self,x):
+        pass
+    def backward(self,dout):
+        pass
+       
+def softmax(x):
+    return x/np.sum(np.exp(x),axis=0)
+def cross_entropy_error(x,y):
+    batch_size = y.shape[0]
+    return -np.sum(y*np.log(x+1e-7))/batch_size
+class SoftmaxWithLoss:
+    def __init__(self):
+        self.loss = None
+        self.y = None
+        self.t = None
+    def forward(self,x,t):
+        self.t = t
+        self.y = softmax(x)
+        self.loss = cross_entropy_error(self.y,self.t)
+        return self.loss
+        
+    def backward(self,dout=1):
+        batch_size = self.t.shape[0]
+        dx = (self.y - self.t)/batch_size
+        return dx
+        
+        
+class Relu:
+    def __init__(self):
+        self.mask = None
+    def forward(self,x):
+        self.mask = (x<=0)
+        out = x.copy()
+        out[self.mask] = 0 
+        return out
+    def backward(self,dout):
+        dx = dout.copy()
+        dx[self.mask] = 0
+        return dx
+        
+        
+class AddLayer:
+    def __init__(self):
+        pass
+    def forward(self,x,y):
+        out = x + y
+        return out
+    def backward(self,dout):
+        dx = dout*1
+        dy = dout*1
+        return dx,dy
+        
+        
+from collections import OrderedDict
+class TwoLayerNet:
+    def __init__(self,input_size,hidden_size,output_size,weight_init_std=0.01):
+        self.params = {}
+        self.params['W1'] = weight_init_std * np.random.randn(input_size,hidden_size)
+        self.params['b1'] = np.zeros(hidden_size)
+        self.params['W2'] = weight_init_std * np.random.randn(hidden_size.output_size)
+        self.params['b2'] = np.zeros(output_size)
+        
+        self.layers = OrderedDict()
+        self.layers['Affine1'] = Affine(self.params['w1'],self.params['b1'])
+        self.layers['Relu1'] = Relu()
+        self.layers['Affine2'] = Affine(self.params['w2'],self.params['b2'])
+        self.lastLayer = SoftmaxWithLoss() 
+    def predict(self,x):
+        for layer in self.layers.values():
+            x = layers.forward(x)
+        return x
+    def loss(self,x,t):
+        return self.lastLayer.forward(self.predict(x),t)
+    def accuracy(self,x,t):
+        ret = self.predict(x)
+        pred_ret = np.argmax(ret,axis=1)
+        if t.ndim != 1 : 
+            t = np.argmax(t,axis=1)
+        accuracy = np.sum(pred_ret == t)/float(t.shape[0])
+    def gradient(self,x,t):
+        self.loss(x,t)
+        dout = 1
+        dout = self.lastLayer.backward(dout)
+        for layer in self.layers:
+            dout = self.layers.backward(dout)
+        grads = {}
+        grads['W1'] = self.layers['Affine1'].dw 
+        grads['b1'] = self.layers['Affine1'].db
+        grads['W2'] = self.layers['Affine2'].dw 
+        grads['b2'] = self.layers['Affine1'].db
+        return grads
