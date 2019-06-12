@@ -1,0 +1,97 @@
+hive
+1、内部表：
+	create table t1(
+		id int,
+		name string,
+		hobby array<string>,
+		add map<String,String>
+	)row format delimited fields terminated by ','
+	collection items terminated by '-'
+	map keys terminated by ':';
+	
+	查看表的描述：
+		desc t1;
+	装载数据：
+		load data [local] inpath 'filepath' [overwrite] into table tablename [partition(partcol1=val1,partcol2=val2)];
+		ex: load data local inpath '/home/hadoop/Desktop/data' overwrite into table t1;
+2、外部表：
+	被external修饰的外外部表：
+	create external table t2(
+		id      int
+	   ,name    string
+	   ,hobby   array<string>
+	   ,add     map<String,string>
+	)
+	row format delimited
+	fields terminated by ','
+	collection items terminated by '-'
+	map keys terminated by ':'
+	location '/user/t2'
+	;
+	获取位置信息：
+		desc formatted table_name;(图中managed table就是内部表，而external table就是外部表)
+	删除表：
+		drop table t1;(表元信息和数据都被删除)
+		drop table t2;(删除外部表仅删除表的元信息)
+		
+		
+3、分区表：
+	创建有一个分区的分区表：
+		CREATE TABLE IF NOT EXISTS part_test(         
+		  c1       string
+		 ,c2       string
+		 ,c3       string 
+		 ,c4       string
+		)PARTITIONED BY (day_id string)
+		ROW FORMAT DELIMITED FIELDS TERMINATED BY ','
+		STORED AS TEXTFILE;
+		
+	创建有两个分区的分区表：
+		CREATE TABLE IF NOT EXISTS part_test_1(                
+		  c1       string
+		 ,c2       string   
+		 ,c3       string 
+		 ,c4       string   
+		) PARTITIONED BY (month_id string,day_id string)
+		ROW FORMAT DELIMITED FIELDS TERMINATED BY '|'
+		STORED AS TEXTFILE;
+
+		
+4、外部分区表：
+	创建一个映射到/user/tuoming/part目录的外部分区表：
+		CREATE EXTERNAL TABLE IF NOT EXISTS part_test_2(
+		  c1       string
+		 ,c2       string
+		 ,c3       string
+		 ,c4       string
+		)PARTITIONED BY (month_id string,day_id string)
+		ROW FORMAT DELIMITED FIELDS TERMINATED BY ','
+		STORED AS TEXTFILE
+		LOCATION '/user/tuoming/part';
+
+
+5、桶表：
+	ex:
+		create table emp_bucket
+		(
+		empno int,
+		ename string,
+		job string,
+		mgr int,
+		hiredate string,
+		sal int,
+		comm int,
+		deptno int
+		)clustered by(job) into 4 buckets
+		row format delimited fields terminated by ',';
+		set hive.enforce.bucketing = true
+	注：一个桶表对应hdfs上第一个文件
+	
+6、视图：
+	是一个虚表；
+	作用：简化复杂的查询
+		create view view10
+		as 
+		select * from where deptno=10;
+		
+Hive分区表的分区操作: https://blog.csdn.net/afafawfaf/article/details/80249974
