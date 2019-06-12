@@ -1,4 +1,5 @@
 hive
+set hive.cli.print.current.db=true;
 1、内部表：
 	create table t1(
 		id int,
