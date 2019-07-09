@@ -1,10 +1,2 @@
-import xlrd
-import xlwt
-
-def read_excel(file_path,sheet_name):
-    workbook = xlrd.open_workbook(filepath)
-    sheet_names = workbook.sheet_names()
-    if sheet_name in sheet_names:
-        sheet = workbook.sheet_by_name(sheet_name)
-        for i in range(sheet.nrows):
-            yield(sheet.row(i))
+mvn install:install-file --settings D:/application/apache-maven-3.5.2/conf/settings.xml -DgroupId=com.apache.ttest -DartifactId=maybetest-20190706 -Dversion=1.0.1 -Dpackaging=jar -Dfile=C:\Users\jwx640680\AppData\Roaming\eSpace_Desktop\UserData\jwx640680\ReceiveFile\antlr-2.7.2.jar 
+mvn deploy:deploy-file -DgroupId= -DartifactId= -Dversion= -Dpackaging=jar -Dfile=C:/Users/lwx643706/AppData/Roaming/eSpace_Desktop/UserData/lwx643706/ReceiveFile/com.xxx-7.2.3.jar -Durl= -s D:/DOWNLOAD/apache-maven-3.5.2/apache-maven-3.5.2/conf/settings.xml
